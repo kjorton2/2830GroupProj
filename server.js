@@ -1,66 +1,126 @@
-if(process.env.NODE_ENV !== 'production'){
-    require('dotnev').config()
-}
-
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
-const port = 3000
+const port = process.env.PORT || 5000;
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 
-const bcrypt = require('bcrypt')
-const passport = require('passport')
-const flash = require('express-flash')
-const session = require('express-session')
-const methodOverite = require('method-overide')
+app.use(cors());
+app.use(bodyParser.json());
 
-const users = [];
+// User model
+const User = mongoose.model('User', {
+    name: String,
+    email: String,
+    password: String,
+  });
 
-app.set('view engine', 'ejs')
-app.use(express.urlencoded({ extended: false }));
+const corsOption = {
+  origin: 'http://localhost:3000', // Frontend's URL
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
-app.get('/', (req, res) => res.render('register', {name:'Register'}));
+app.use(cors(corsOption));
 
-app.get('/login', (req, res) => res.render('login.ejs'))
-app.post('/login', (req,res) =>{
+mongoose.connect("mongodb+srv://anyone:anyone123@finalmongo.muawtu7.mongodb.net/Test?retryWrites=true&w=majority", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => {
+    console.log('MongoDB connected');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
 
-})
-app.get('/register', (req, res) => res.render('register.ejs'))
-app.post('/register', (req,res) =>{
-req.body.email 
-})
-app.listen(port, () => console.log('Started port 3000'))
-
-app.get('/register', checkNotAuthenticated, (req, res) => {
-    res.render('register.ejs')
-})
-app.post('/register', checkNotAuthenticated, async (req, res) =>{
-    try{
-        const hashedPassword = await bcrypt.hash(req.body.password, 8)
-        users.push({
-            id: Date.now().toString(),
-            name: req.body.name,
-            email: req.body.email,
-            password: hashedPassword
-        })
-        res.redirect('/login')
+// Registration route
+app.post('/api/register', async (req, res) => {
+    const { name, email, password } = req.body;
+  
+    try {
+      // Create a new user
+      const newUser = new User({ name, email, password });
+  
+      // Save the user to the database
+      const savedUser = await newUser.save();
+  
+      // Send a success response
+      res.status(201).json({
+        _id: savedUser._id,
+        name: savedUser.name,
+        email: savedUser.email,
+      })
+      
+      
+    } catch (error) {
+      // Handle registration failure
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Registration failed' });
     }
-    catch{
-        res.redirect('/register')
+});
+
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      // Find the user by email
+      const user = await User.findOne({ email });
+  
+      // If the user is not found, send an error response
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+  
+      // Check if the provided password matches the stored hashed password
+      const passwordMatch = await bcrypt.compare(password, user.password);
+  
+      // If the passwords do not match, send an error response
+      if (!passwordMatch) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+  
+      // Send a success response
+      res.status(200).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      });
+    } catch (error) {
+      // Handle login failure
+      console.error('Login error:', error);
+  
+      // Send an error response
+      res.status(500).json({ error: 'Login failed' });
     }
-    console.log(users)
-})
-app.delete('/logout', (req, res) => {
-    req.logOut()
-    res.redirect('/login')
-})
-function checkAuthenticated(req, res, next){
-    if(req.isAuthenticated()){
-        return next()
+});
+
+app.post('/api/save-flashcard', async (req, res) => {
+    const { verse, verseContent } = req.body;
+  
+    try {
+      // Save flashcard information to the database
+      // You may associate this data with the currently logged-in user
+      // Example using Mongoose:
+      const userId = req.user._id; // Assuming you have user authentication middleware
+      const user = await User.findById(userId);
+      user.flashcards.push({ verse, verseContent });
+      await user.save();
+  
+      
+      res.status(200).json({ message: 'Flashcard saved successfully' });
+    } catch (error) {
+      // Handle error
+      console.error('Saving flashcard failed:', error);
+      res.status(500).json({ error: 'Saving flashcard failed' });
     }
-    res.redirect('/login')
-}
-function checkNotAuthenticated(req, res, next){
-    if(req.isAuthenticated()){
-        return res.redirect('/')
-    }
-    next()
-}
+  });
+
+
+app.get('/', (req, res) => {
+  res.send('Hello from the MERN stack!');
+});
+
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
