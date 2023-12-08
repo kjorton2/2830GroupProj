@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import logo from './logo.svg';
 import './App.css';
 import Register from './Components/Register';
 import Login from './Components/Login';
 import Flashcard from './Components/Flashcard';
+import Header from './Components/Header';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom'
 
 function App() {
   const [data, setData] = useState('');
@@ -17,29 +18,17 @@ function App() {
 
   return (
     <div>
-      <h1>MERN Stack Example</h1>
-      <Register />
-      <Login />
-      <Flashcard />
+      <Router>
+          <Header />
+                <div>
+                    <Routes>
+                        <Route exact path='/' element={<Register/>}/>
+                        <Route path="/login" element={<Login/>}/>
+                        <Route path="/flashcard" element={<Flashcard/>}/>
+                    </Routes>
+                </div>
+      </Router>
     </div>
-    // <div className="App">
-    //   <header className="App-header">
-    //     <img src={logo} className="App-logo" alt="logo" />
-    //     {data}
-
-    //     <p>
-    //       Edit <code>src/App.js</code> and save to reload.
-    //     </p>
-    //     <a
-    //       className="App-link"
-    //       href="https://reactjs.org"
-    //       target="_blank"
-    //       rel="noopener noreferrer"
-    //     >
-    //       Learn React
-    //     </a>
-    //   </header>
-    // </div>
   );
 }
 
