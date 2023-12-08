@@ -14,7 +14,7 @@ const User = mongoose.model('User', {
     name: String,
     email: String,
     password: String,
-  });
+});
 
 const corsOption = {
   origin: 'http://localhost:3000', // Frontend's URL
@@ -24,14 +24,12 @@ const corsOption = {
 app.use(cors(corsOption));
 
 mongoose.connect("mongodb+srv://anyone:anyone123@finalmongo.muawtu7.mongodb.net/Test?retryWrites=true&w=majority", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
 }).then(() => {
     console.log('MongoDB connected');
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
-  });
+});
 
 // Registration route
 app.post('/api/register', async (req, res) => {
@@ -94,14 +92,14 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+
+
 app.post('/api/save-flashcard', async (req, res) => {
     const { verse, verseContent } = req.body;
   
     try {
       // Save flashcard information to the database
-      // You may associate this data with the currently logged-in user
-      // Example using Mongoose:
-      const userId = req.user._id; // Assuming you have user authentication middleware
+      const userId = req.user._id; 
       const user = await User.findById(userId);
       user.flashcards.push({ verse, verseContent });
       await user.save();
@@ -113,11 +111,11 @@ app.post('/api/save-flashcard', async (req, res) => {
       console.error('Saving flashcard failed:', error);
       res.status(500).json({ error: 'Saving flashcard failed' });
     }
-  });
+});
 
 
 app.get('/', (req, res) => {
-  res.send('Hello from the MERN stack!');
+  res.send('Hello from the backend');
 });
 
 
