@@ -118,6 +118,18 @@ app.get('/', (req, res) => {
   res.send('Hello from the backend');
 });
 
+app.get('/api/register', (req, res) => {
+  res.send('register api');
+});
+
+app.get('/api/save-flashcard', (req, res) => {
+  res.send('flashcard api');
+});
+
+app.get('/api/login', (req, res) => {
+  res.send('login api');
+});
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
